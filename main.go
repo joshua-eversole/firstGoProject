@@ -10,7 +10,9 @@ func main() {
 	arrays()
 	slices()
 	maps()
-
+	structs()
+	strings()
+	structsTwo()
 }
 
 func printMe(printValue string) {
@@ -58,4 +60,61 @@ func maps(){
 	else{
 		fmt.Println("Goofy is not in the map")
 	}
+
+	delete(map2, "Mickey")
+	fmt.Println(map2)
 }
+
+def structs(){
+	//structs are like classes in python, but can't have methods
+	//they can have fields and can be used to create objects
+	type person struct{
+		name string
+		age int	
+	}
+	var p1 person
+	p1.name = "Gus"
+	p1.age = 25
+	fmt.Println(p1)	
+
+}
+
+def strings(){
+	//strings are immutable in Go, but can be indexed
+	var myString = "racecar"
+	var indexed = myString[1]
+	fmt.Printf("%v, %T\n", indexed, indexed)
+	for i, v := range myString{
+		fmt.Println(i, v)
+	}
+	fmt.Printf("\nThe length of 'myString' is %v\n", len(myString))
+
+}
+
+type gasEngine struct{
+	mpg uint8
+	gallons uint8
+}
+
+def structsTwo(){
+	var myEngine gasEngine = gasEngine{mpg: 30, gallons: 10}
+	fmt.Println(myEngine)
+}
+
+def pointers(){
+	//pointers are used to store the memory address of a variable
+	var x int = 5
+	var y *int = &x
+	fmt.Println(x, y)
+	fmt.Println(*y)
+	*y = 10
+	fmt.Println(x, y)
+	var p *int32 = new(int32)
+	var i int32
+	fmt.Printf("The value p points to is %v", *p)
+	fmt.Printf("The value of i is %v", i)
+	p = &i
+}
+
+
+
