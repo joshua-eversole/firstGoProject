@@ -1,120 +1,176 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"math/rand"
+)
+
+// you have to put the type returned in the function decleration
+func getName() string {
+	name := ""
+	fmt.Println("Welcome to Josh's Casino!")
+	fmt.Printf("Enter your name: ")
+	//the & gives the memory address of the variable
+	// this means the Scanln function can store the input in the variable and replace the existing value
+	_, err := fmt.Scanln(&name)
+	// nil is none, err
+	if err != nil {
+		fmt.Println(err)
+		return ""
+	}
+	fmt.Printf("Hello, %s! Let's play some games!\n", name)
+	return name
+}
+
+func getBet(balance uint) uint {
+	bid := 0
+	//There is no while loop in go (wtf i'm gonna cry i love while loops)
+	for true {
+		fmt.Printf("You have $%d. How much would you like to bet? ", balance)
+		_, err := fmt.Scanln(&bid)
+		if err != nil {
+			fmt.Println(err)
+			return 0
+		}
+		if bid <= int(balance) {
+			break
+		}
+		fmt.Println("You don't have enough money to bet that much!")
+	}
+	return uint(bid)
+}
+
+func continueGame() bool {
+	choice := ""
+	for true {
+		fmt.Printf("Would you like to continue playing? (y/n) ")
+		_, err := fmt.Scanln(&choice)
+		if err != nil {
+			fmt.Println(err)
+			return false
+		}
+		if choice == "y" {
+			return true
+		} else if choice == "n" {
+			return false
+		} else {
+			fmt.Println("Please enter y or n.")
+		}
+	}
+	return false
+}
+
+// slice is an image of an array, it's a reference to an array and can be resized (which arrays can't be)
+func generateSymbolArray(symbols map[string]uint) []string {
+	symbolArray := []string{}
+	for symbol, count := range symbols {
+		for i := uint(0); i < count; i++ {
+			symbolArray = append(symbolArray, symbol)
+		}
+	}
+	return symbolArray
+}
+
+func getRandomNumber(min int, max int) int {
+	return rand.Intn(max-min+1) + min
+}
+
+func getSpin(reel []string, rows int, cols int) [][]string {
+	spin := [][]string{}
+	for i := 0; i < rows; i++ {
+		spin = append(spin, []string{})
+	}
+	//this is a nested loop, the start with cols instead of rows on purpose
+	for col := 0; col < cols; col++ {
+		selected := map[int]bool{}
+		for row := 0; row < rows; row++ {
+			for true {
+				randomIndex := getRandomNumber(0, len(reel)-1)
+				if _, exists := selected[randomIndex]; !exists {
+					selected[randomIndex] = true
+					spin[row] = append(spin[row], reel[randomIndex])
+					break
+				}
+			}
+		}
+	}
+	return spin
+}
+
+func printSpin(spin [][]string) {
+	for _, row := range spin {
+		for j, symbol := range row {
+			fmt.Printf("%s ", symbol)
+			if j == len(row)-1 {
+				fmt.Printf(" | ")
+			}
+		}
+		fmt.Println()
+	}
+}
+
+func checkWin(spin [][]string, multipliers map[string]uint8) []int {
+	wins := []int{}
+	for _, row := range spin {
+		win := true
+		checkSymbol := row[0]
+		for _, symbol := range row[1:] {
+			if symbol != checkSymbol {
+				win = false
+				break
+			}
+		}
+		if win {
+			wins = append(wins, int(multipliers[checkSymbol]))
+		} else {
+			wins = append(wins, 0)
+		}
+	}
+	return wins
+}
 
 func main() {
-	printMe("Hello, World!")
-	var result, remainder = intDivision(5, 2)
-	fmt.Println("The result is", result)
-	fmt.Println("The remainder is", remainder)
-	arrays()
-	slices()
-	maps()
-	structs()
-	strings()
-	structsTwo()
-}
-
-func printMe(printValue string) {
-	fmt.Println(printValue)
-}
-
-func intDivision(numerator int, denominator int) (int, int) {
-	var result int = numerator / denominator
-	var remainder int = numerator % denominator
-	return result, remainder
-}
-
-func arrays(){
-	var intArr [3]int32 //can't change the length of an array once it's declared
-	intArr[0] = 1
-	fmt.Println(intArr[1:3])
-}
-
-func slices(){
-	//slices are like arrays but can change in size
-	var intSlice []int32
-	intSlice = append(intSlice, 1)
-	fmt.Println("The length of intSlice is", len(intSlice))
-	intSlice = append(intSlice, 2)
-	intSlice = append(intSlice, 3)
-	fmt.Println("The length of intSlice is", len(intSlice))
-	fmt.Println(intSlice)
-	var intSlice2 []int32 = make(int32[], 3, 8)
-}
-
-func maps(){
-	//maps are like dictionaries in python
-	var intMap map[string]int32 = make(map[string]int32)
-	intMap["one"] = 1
-	intMap["two"] = 2
-	intMap["three"] = 3
-	fmt.Println(intMap)
-
-	var map2 = map[string]uint8{"Mickey": 15, "Minnie": 20}
-	fmt.Println(map2["Minnie"])
-	var age, ok = map2["Goofy"]
-	if ok{
-		fmt.Println("Goofy's age is", age)
+	symbols := map[string]uint{
+		"A": 4,
+		"B": 7,
+		"C": 12,
+		"D": 20,
 	}
-	else{
-		fmt.Println("Goofy is not in the map")
+	multipliers := map[string]uint8{
+		"A": 20,
+		"B": 10,
+		"C": 5,
+		"D": 2,
+	}
+	symbolArr := generateSymbolArray(symbols)
+	//we're starting the user with 200 dollars
+	balance := uint(200)
+	getName()
+	bet := uint(0)
+	for balance > 0 {
+		bet = getBet(balance)
+		if bet == 0 { // Corrected this line
+			break
+		}
+		balance -= bet
+
+		spin := getSpin(symbolArr, 3, 3)
+		printSpin(spin)
+		winningLines := checkWin(spin, multipliers)
+		//this is the winning condition
+		for i, multi := range winningLines {
+			win := bet * uint(multi)
+			balance += win
+			if multi > 0 {
+				fmt.Printf("You won $%d on line %d!\n", win, i+1)
+			}
+		}
+		if bet == 0 || !continueGame() {
+			break
+		}
+
 	}
 
-	delete(map2, "Mickey")
-	fmt.Println(map2)
-}
-
-def structs(){
-	//structs are like classes in python, but can't have methods
-	//they can have fields and can be used to create objects
-	type person struct{
-		name string
-		age int	
-	}
-	var p1 person
-	p1.name = "Gus"
-	p1.age = 25
-	fmt.Println(p1)	
+	fmt.Printf("Thanks for playing! You left with $%d\n", balance)
 
 }
-
-def strings(){
-	//strings are immutable in Go, but can be indexed
-	var myString = "racecar"
-	var indexed = myString[1]
-	fmt.Printf("%v, %T\n", indexed, indexed)
-	for i, v := range myString{
-		fmt.Println(i, v)
-	}
-	fmt.Printf("\nThe length of 'myString' is %v\n", len(myString))
-
-}
-
-type gasEngine struct{
-	mpg uint8
-	gallons uint8
-}
-
-def structsTwo(){
-	var myEngine gasEngine = gasEngine{mpg: 30, gallons: 10}
-	fmt.Println(myEngine)
-}
-
-def pointers(){
-	//pointers are used to store the memory address of a variable
-	var x int = 5
-	var y *int = &x
-	fmt.Println(x, y)
-	fmt.Println(*y)
-	*y = 10
-	fmt.Println(x, y)
-	var p *int32 = new(int32)
-	var i int32
-	fmt.Printf("The value p points to is %v", *p)
-	fmt.Printf("The value of i is %v", i)
-	p = &i
-}
-
-
-
