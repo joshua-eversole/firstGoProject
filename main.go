@@ -25,13 +25,13 @@ func intDivision(numerator int, denominator int) (int, int) {
 	return result, remainder
 }
 
-funct arrays(){
+func arrays(){
 	var intArr [3]int32 //can't change the length of an array once it's declared
 	intArr[0] = 1
 	fmt.Println(intArr[1:3])
 }
 
-funct slices(){
+func slices(){
 	//slices are like arrays but can change in size
 	var intSlice []int32
 	intSlice = append(intSlice, 1)
