@@ -2,43 +2,9 @@ package main
 
 import (
 	"fmt"
-	"math/rand"
 )
 
 // you have to put the type returned in the function decleration
-func getName() string {
-	name := ""
-	fmt.Println("Welcome to Josh's Casino!")
-	fmt.Printf("Enter your name: ")
-	//the & gives the memory address of the variable
-	// this means the Scanln function can store the input in the variable and replace the existing value
-	_, err := fmt.Scanln(&name)
-	// nil is none, err
-	if err != nil {
-		fmt.Println(err)
-		return ""
-	}
-	fmt.Printf("Hello, %s! Let's play some games!\n", name)
-	return name
-}
-
-func getBet(balance uint) uint {
-	bid := 0
-	//There is no while loop in go (wtf i'm gonna cry i love while loops)
-	for true {
-		fmt.Printf("You have $%d. How much would you like to bet? ", balance)
-		_, err := fmt.Scanln(&bid)
-		if err != nil {
-			fmt.Println(err)
-			return 0
-		}
-		if bid <= int(balance) {
-			break
-		}
-		fmt.Println("You don't have enough money to bet that much!")
-	}
-	return uint(bid)
-}
 
 func continueGame() bool {
 	choice := ""
@@ -58,55 +24,6 @@ func continueGame() bool {
 		}
 	}
 	return false
-}
-
-// slice is an image of an array, it's a reference to an array and can be resized (which arrays can't be)
-func generateSymbolArray(symbols map[string]uint) []string {
-	symbolArray := []string{}
-	for symbol, count := range symbols {
-		for i := uint(0); i < count; i++ {
-			symbolArray = append(symbolArray, symbol)
-		}
-	}
-	return symbolArray
-}
-
-func getRandomNumber(min int, max int) int {
-	return rand.Intn(max-min+1) + min
-}
-
-func getSpin(reel []string, rows int, cols int) [][]string {
-	spin := [][]string{}
-	for i := 0; i < rows; i++ {
-		spin = append(spin, []string{})
-	}
-	//this is a nested loop, the start with cols instead of rows on purpose
-	for col := 0; col < cols; col++ {
-		selected := map[int]bool{}
-		for row := 0; row < rows; row++ {
-			for true {
-				randomIndex := getRandomNumber(0, len(reel)-1)
-				if _, exists := selected[randomIndex]; !exists {
-					selected[randomIndex] = true
-					spin[row] = append(spin[row], reel[randomIndex])
-					break
-				}
-			}
-		}
-	}
-	return spin
-}
-
-func printSpin(spin [][]string) {
-	for _, row := range spin {
-		for j, symbol := range row {
-			fmt.Printf("%s ", symbol)
-			if j == len(row)-1 {
-				fmt.Printf(" | ")
-			}
-		}
-		fmt.Println()
-	}
 }
 
 func checkWin(spin [][]string, multipliers map[string]uint8) []int {
@@ -142,22 +59,23 @@ func main() {
 		"C": 5,
 		"D": 2,
 	}
-	symbolArr := generateSymbolArray(symbols)
+	symbolArr := GenerateSymbolArray(symbols)
 	//we're starting the user with 200 dollars
 	balance := uint(200)
-	getName()
+	//GetName()
 	bet := uint(0)
 	for balance > 0 {
-		bet = getBet(balance)
+		bet = GetBet(balance)
 		if bet == 0 { // Corrected this line
 			break
 		}
 		balance -= bet
 
-		spin := getSpin(symbolArr, 3, 3)
-		printSpin(spin)
+		spin := GetSpin(symbolArr, 3, 3)
+		PrintSpin(spin)
 		winningLines := checkWin(spin, multipliers)
 		//this is the winning condition
+		fmt.Printf("winning lines: %v\n", winningLines)
 		for i, multi := range winningLines {
 			win := bet * uint(multi)
 			balance += win
@@ -165,7 +83,8 @@ func main() {
 				fmt.Printf("You won $%d on line %d!\n", win, i+1)
 			}
 		}
-		if bet == 0 || !continueGame() {
+		//if bet == 0 || !continueGame() {
+		if bet == 0 {
 			break
 		}
 
